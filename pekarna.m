@@ -64,10 +64,12 @@ while time < dobaSimulace
 end
 
 %neobslouzeni zakazniku po zaviracce
-for opozdilec = veFronte(:,1)
-    zakaznici(opozdilec,2) = time;
-    zakaznici(opozdilec,3) = time;
-    zakaznici(opozdilec,4) = 0;
+if ~isempty(veFronte)
+    for opozdilec = veFronte(:,1)
+        zakaznici(opozdilec,2) = time;
+        zakaznici(opozdilec,3) = time;
+        zakaznici(opozdilec,4) = 0;
+    end
 end
 
 % vypocet prumerne delky fronty
