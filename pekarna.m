@@ -1,12 +1,12 @@
 % basic usage: "pekarna(4);"
 function [zakaznici,prumerna_delka_fronty,...
     prumerna_doba_v_pekarne,prumerna_doba_ve_fronte,...
-    pocet_obslouzenych, pocet_neobslouzenych, trzba, usla_trzba] = ...
+    pocet_obslouzenych, pocet_neobslouzenych, trzba, usla_trzba, fronta_hist] = ...
     pekarna(pocetPrepazek,maxFronta,dobaCekani,zakazniciph,...
     dobaObsluhy,utrata,pocatecniFronta,dobaSimulace)
 if nargin < 1, pocetPrepazek = 1; end % pocet prepazek
 if nargin < 2, maxFronta = Inf; end
-if nargin < 3, dobaCekani = 60; end % ochota zakaznika pockat si
+if nargin < 3, dobaCekani = 15; end % ochota zakaznika pockat si
 if nargin < 4, zakazniciph = 100; end % stredni pocet cestujicich k odbaveni za hodinu
 if nargin < 5, dobaObsluhy = 2; end % stredni doba stravena na prepazce v minutach
 if nargin < 6, utrata = 100; end
@@ -24,6 +24,8 @@ veFronte = [ ];
 vObsluze = [ ];
 obslouzeno = 0;
 
+obsluha_hist = [];
+
 prichod = time+exprnd(1/zakazniciph);
 dalsiOdchod = Inf;
 dalsiObsluha = Inf;
@@ -35,7 +37,8 @@ end
 
 % simulace
 while time < dobaSimulace
-    fronta_hist(end+1,:) = [time fronta fronta+length(vObsluze)];
+    fronta_hist(end+1,:) = [time fronta fronta+size(vObsluze,1)];
+    obsluha_hist(end+1,:) = [time size(vObsluze,1)];
 
     % Buï prijde zakaznik nebo zakaznik odejde (skonci obsluha u prepazky)
     
@@ -54,7 +57,7 @@ while time < dobaSimulace
         %okamzik doobslouzeni zakaznika
         [time, prepazka] = min(vObsluze(:,2)); % POZOR tady se posouva cas; vezmu prvniho doobslouzeneho (na tento okamzik posunu hodiny)
         if(fronta > 0) % pokud mam lidi ve fronte, tak doobslouzeneho nahradim novym
-            obsluzDalsihoZakaznika(prichod,veFronte(1,1),prepazka);
+            obsluzDalsihoZakaznika(time,veFronte(1,1),prepazka);
             opustFrontu(1);
         else
             vObsluze(prepazka,:) = [ ]; % zakaznik odesel
@@ -70,6 +73,7 @@ if ~isempty(veFronte)
         zakaznici(opozdilec,3) = time;
         zakaznici(opozdilec,4) = 0;
     end
+    fronta = 0;
 end
 
 % vypocet prumerne delky fronty
@@ -78,8 +82,10 @@ prumerna_delka_fronty=sum(diff(fronta_hist(:,1)).*fronta_hist(1:end-1,2))/fronta
 obslouzeni = zakaznici(zakaznici(:,4) == 1,:);
 odmitnuti = zakaznici(zakaznici(:,4) == 0,:);
 doba_v_pekarne=(obslouzeni(:,3)-obslouzeni(:,1))*60;
-doba_ve_fronte=(obslouzeni(:,2)-obslouzeni(:,1))*60;
+doba_v_obsluze=(obslouzeni(:,3)-obslouzeni(:,2))*60;
+doba_ve_fronte=(zakaznici(:,2)-zakaznici(:,1))*60;
 prumerna_doba_v_pekarne=mean(doba_v_pekarne);
+prumerna_doba_v_obsluze=mean(doba_v_pekarne);
 prumerna_doba_ve_fronte=mean(doba_ve_fronte);
 pocet_obslouzenych = sum(zakaznici(:,4) == 1);
 pocet_neobslouzenych = sum(zakaznici(:,4) == 0);
@@ -90,11 +96,14 @@ usla_trzba = sum(odmitnuti(:,5));
 if nargout < 1
     figure
     subplot(2,2,[1,3])
+    %subplot(2,2,1)
     vykresliFrontu
     subplot(2,2,2)
     vykresliDobu
     subplot(2,2,4)
     vykresliPenize
+    %subplot(2,2,3)
+    %plot(obsluha_hist(:,1),obsluha_hist(:,2))
     
     % vypis hodnoty
     disp(['Prumerne hodnoty'])
@@ -126,7 +135,7 @@ end
 
     function vykresliDobu
         %vykresleni doby stravene v pekarne
-        histogram(doba_v_pekarne,35)
+        histogram(doba_v_obsluze,35)
         title('Graf doby stravene v pekarne')
         xlabel('stravena doba [minuty]')
         ylabel('Pocet zakazniku') 
@@ -134,27 +143,29 @@ end
         histogram(doba_ve_fronte,35)
         line([1,1]*prumerna_doba_v_pekarne,ylim,'Color','r')
         
-        legend('v pekarne', 've fronte', 'prumer')
+        legend('v obsluze', 've fronte', 'prumer')
        % plot()
        hold off
     end
 
     function vykresliPenize
-        stairs(obslouzeni(:,1),cumsum(obslouzeni(:,5)));
+        obso = sortrows(obslouzeni,3);
+        stairs(obso(:,3),cumsum(obso(:,5)));
         hold on
-        stairs(odmitnuti(:,1),cumsum(odmitnuti(:,5)),'r');
+        odmi = sortrows(odmitnuti,3);
+        stairs(odmi(:,3),cumsum(odmi(:,5)),'r');
         hold off
         title('Trzba a usla trzba')
         xlabel('cas')
         ylabel('trzba')
-        legend('trzba','usla trzba')
+        legend('trzba','usla trzba','Location','northwest')
     end
 
     function prichodZakaznika(prichod)
         zakaznici(end+1,1) = prichod; % pridame zakaznika do systemu
         zakaznici(end,5) = gamrnd(utrata,1); %normrnd(utrata,0.25*utrata); % ochota utratit
         % prichozi zakaznik musi cekat ve fronte nebo se rovnou obslouzi
-        if(length(vObsluze) < pocetPrepazek) %existuje volna prepazka
+        if(size(vObsluze,1) < pocetPrepazek) %existuje volna prepazka
             obsluzDalsihoZakaznika(prichod,size(zakaznici,1));
         else %zakaznik musi cekat ve fronte
             if fronta < maxFronta 
@@ -183,7 +194,11 @@ end
     end
 
     function zakaznikCeka(kdy,kdo)
-        casOdchodu = kdy + exprnd(dobaCekani/60);
+        if dobaCekani < Inf
+            casOdchodu = kdy + exprnd(dobaCekani/60);
+        else 
+            casOdchodu = Inf;
+        end
         fronta = fronta+1; % zakaznik pocka ve fronte
         veFronte(end+1,1:2) = [kdo casOdchodu];
         dalsiOdchod = min(veFronte(:,2));
