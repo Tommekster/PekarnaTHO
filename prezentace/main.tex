@@ -1,0 +1,112 @@
+\documentclass[12pt]{beamer}
+
+\parindent 0mm
+\parskip 0.5em plus 1pt
+
+%\usetheme{Darmstadt}
+%\usetheme{Marburg}
+%\usetheme{Hannover}
+%\usecolortheme{crane}
+\usefonttheme[onlylarge]{structurebold}
+\setbeamerfont*{frametitle}{size=\normalsize,series=\bfseries}
+\setbeamertemplate{navigation symbols}{}
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{wrapfig}
+
+% Setup TikZ
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\tikzstyle{block}=[draw opacity=0.7,line width=1.4cm]
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amscd}
+\usepackage{wasysym}
+\usepackage{verbatim}
+\usepackage{euler,eucal}
+%\newcommand{\slideCite}[1]{\raisebox{1ex}{\tiny \cite{#1}}}
+
+
+\newtheorem{define}{Definice}[section]
+\newtheorem*{define*}{Definice}
+\newtheorem{veta}[define]{Věta}
+\newtheorem*{veta*}{Věta}
+\newtheorem{remark}[define]{Poznámka}
+
+%% moje nastaveni
+\newcommand{\nazev}{Model hromadné obsluhy}
+\newcommand{\nazevsl}{\nazev}
+
+\newcommand{\matice}{\mathbb}
+\newcommand{\Tr}{\mbox{Tr~}}
+
+\DeclareMathOperator{\Diam}{Diam}
+\DeclareMathOperator{\Area}{Area}
+\DeclareMathOperator{\cotg}{cotg}
+
+%% MARK: Title & Data
+\title%[Finding structures in graphs]
+{
+    \includegraphics[width=0.25\columnwidth]{imgs/fjfi.png}\\
+    \nazev
+}
+
+\author[Zikmund]
+{
+    Tomáš~Zikmund
+}
+
+\institute[FJFI CVUT]
+{
+    tomaszikmund@me.com
+    \and
+    Fakulta jaderná a fyzikálně inženýrská, Břehová 7, 115 19 Praha 1
+}
+
+\date{MMC -- \today}
+
+%% Begin Document
+\begin{document}
+
+    \begin{frame}
+        \titlepage
+    \end{frame}
+
+    \begin{frame}{Obsah}
+        \tableofcontents
+    \end{frame}
+
+    %% MARK: Introduction
+    \section{Motivace}
+    \input{intro}
+
+    \section{Modely hromadné obsluhy}
+    \input{tho} 
+
+    \section{Model pekárny}
+    \input{pekarna}
+    
+    \section{Výsledky}
+    \input{example}
+
+    %\section{Závěr}
+    \input{conclusion} % conclusion
+
+    \section*{~}
+
+    \begin{frame}{~}
+        \begin{center}
+           \LARGE{Děkuji za pozornost}
+        \end{center}
+    \end{frame}
+
+\end{document}
